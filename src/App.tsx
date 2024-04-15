@@ -12,7 +12,7 @@ function App() {
     <>
       <SignedOut>
         <SignInButton />
-        <h1>Sighn</h1>
+        <Posts />
       </SignedOut>
       <SignedIn>
         <Posts />
