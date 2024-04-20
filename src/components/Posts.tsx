@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useUser, SignOutButton, SignedIn } from "@clerk/clerk-react";
 import { createClient } from "@supabase/supabase-js";
+import { Link } from "react-router-dom";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
@@ -51,25 +52,6 @@ const Posts = () => {
     }
   };
 
-  const editPosts = async (post: Post) => {
-    if (user?.username !== post.username) {
-      alert("Cannot edit others post.");
-      return;
-    }
-
-    const newContent = prompt("Enter new content:");
-    if (newContent === null) return; // User cancelled the prompt
-
-    const { error } = await supabase
-      .from("posts")
-      .update({ content: newContent })
-      .match({ id: post.id });
-    if (error) console.error("Error editing the post", error);
-    else {
-      fetchPosts();
-    }
-  };
-
   return (
     <div className="p-2 flex justify-between">
       <div className=" flex flex-col">
@@ -90,7 +72,7 @@ const Posts = () => {
                   <div className="text-sm flex items-center">
                     <img
                       src={post.userImageUrl}
-                      alt=""
+                      alt={post.firstName}
                       className="w-7 h-7  rounded-full"
                     />
                     <div className="flex flex-col items-start ml-1">
@@ -127,14 +109,14 @@ const Posts = () => {
                     <div className="absolute right-0 z-[99]">
                       <Menu
                         onDelete={() => deletePosts(post)}
-                        onEdit={() => editPosts(post)}
+                        setIsMenuOpen={setIsMenuOpen}
                       />
                     </div>
                   )}
                 </div>
               </div>
-              <div className="mt-2 text-sm whitespace-pre-wrap">
-                {post.content}
+              <div className="mt-2 text-sm whitespace-pre-wrap flex flex-col">
+                <span>{post.content}</span>
               </div>
               <div className=""></div>
             </div>
@@ -143,6 +125,16 @@ const Posts = () => {
       <SignedIn>
         <div className="">
           <PostWrite onNewPost={fetchPosts} />
+          <button>
+            <Link to={`/profile/${user?.id}`} className="flex items-center">
+              <img
+                src={user?.imageUrl}
+                alt={user?.username || "User Avatar"}
+                className="w-5 h-5 rounded-full mr-1"
+              />{" "}
+              {user?.username}'s Profile
+            </Link>
+          </button>
         </div>
       </SignedIn>
     </div>
@@ -231,28 +223,47 @@ const PostWrite: React.FC<PostWriteProps> = ({ onNewPost }) => {
 
 interface MenuProps {
   onDelete: () => void;
-  onEdit: () => void;
+  setIsMenuOpen: React.Dispatch<React.SetStateAction<number | null>>;
 }
 
-const Menu: React.FC<MenuProps> = ({ onDelete, onEdit }) => {
+const Menu: React.FC<MenuProps> = ({ onDelete, setIsMenuOpen }) => {
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="bg-secondary w-28 p-1 rounded-xl">
       <ul className="text-xs">
         <li
-          onClick={onEdit}
-          className="hover:bg-gray-400 px-2 py-1 rounded-lg transition-colors duration-200 ease-in-out cursor-pointer"
+          onClick={() => {
+            setIsMenuOpen(null);
+          }}
+          className="hover:bg-gray-400 px-2 py-1 rounded-lg mt-1 transition-colors duration-200 ease-in-out cursor-pointer"
         >
-          Edit
-        </li>
-        <li className="hover:bg-gray-400 px-2 py-1 rounded-lg mt-1 transition-colors duration-200 ease-in-out cursor-pointer">
           Share
         </li>
-        <li
-          onClick={onDelete}
-          className="hover:bg-red-400 px-2 py-1 rounded-lg mt-1 transition-colors duration-200 ease-in-out cursor-pointer"
-        >
-          Delete
-        </li>
+        <SignedIn>
+          <li
+            onClick={() => {
+              onDelete();
+              setIsMenuOpen(null);
+            }}
+            className="hover:bg-red-400 px-2 py-1 rounded-lg mt-1 transition-colors duration-200 ease-in-out cursor-pointer"
+          >
+            Delete
+          </li>
+        </SignedIn>
       </ul>
     </div>
   );
