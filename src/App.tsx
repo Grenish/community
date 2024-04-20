@@ -1,9 +1,5 @@
 import Posts from "./components/Posts";
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-} from "@clerk/clerk-react";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/clerk-react";
 
 function App() {
   return (
