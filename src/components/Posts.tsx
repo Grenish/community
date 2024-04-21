@@ -77,9 +77,11 @@ const Posts = () => {
                     />
                     <div className="flex flex-col items-start ml-1">
                       <span className="text-sm">{post.firstName}</span>
-                      <span className="text-xs text-gray-700">
-                        @{post.username}
-                      </span>
+                      <Link to={`/profile/${post.username}`}>
+                        <span className="text-xs text-gray-700">
+                          @{post.username}
+                        </span>
+                      </Link>
                     </div>
                   </div>
                   <span className="text-xs">{post.created_at}</span>
