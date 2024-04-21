@@ -10,6 +10,7 @@ const Profile = () => {
   return (
     <div>
       <img src={user?.imageUrl} alt="" />
+      <h1>{user?.username}</h1>
     </div>
   );
 };
